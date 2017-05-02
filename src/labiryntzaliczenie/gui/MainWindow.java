@@ -7,10 +7,9 @@ package labiryntzaliczenie.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.LayoutManager;
+import java.util.HashMap;
+import java.util.Random;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
@@ -20,6 +19,11 @@ import javax.swing.JPanel;
  */
 public class MainWindow extends javax.swing.JFrame {
     private int X,Y = 0;
+    private final String SOUTH = java.awt.BorderLayout.SOUTH;
+    private final String NORTH = java.awt.BorderLayout.NORTH;
+    private final String EAST = java.awt.BorderLayout.EAST;
+    private final String WEST = java.awt.BorderLayout.WEST;
+    private static HashMap<Integer,String> MAP = new HashMap<>();
     /**
      * Creates new form MainWindow
      */
@@ -30,6 +34,12 @@ public class MainWindow extends javax.swing.JFrame {
         prepareMap();
     }
 
+    {
+        MAP.put(1, NORTH);
+        MAP.put(2, EAST);
+        MAP.put(3, SOUTH);
+        MAP.put(4, WEST);
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -42,6 +52,8 @@ public class MainWindow extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setExtendedState(6);
+        setSize(new java.awt.Dimension(900, 500));
 
         jPanel1.setLayout(new java.awt.GridLayout(10, 20));
 
@@ -57,6 +69,7 @@ public class MainWindow extends javax.swing.JFrame {
         );
 
         pack();
+        setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
 
     /**
@@ -75,15 +88,11 @@ public class MainWindow extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        
         //</editor-fold>
 
         /* Create and display the form */
@@ -93,33 +102,59 @@ public class MainWindow extends javax.swing.JFrame {
     }
 
     private void prepareMap() {
-        
+        for(int ix = 0; ix < 20; ix++){
+            for(int iy = 0; iy < 10; iy++){
+                dfs();
+            }
+        }
     }
 
+    private void dfs(){
+        while(true){
+            Random r = new Random();
+            int cell_num = r.nextInt(1)+4;
+            Cell c = new Cell();
+            if(c.isVisited()){
+
+            }else{
+                c.setWall(new Wall(), MAP.get(cell_num));
+                jPanel1.add(c);
+            }       
+        }
+    }
   
-    
     public class Cell extends JPanel{
         private boolean isVisited = false;
-       
-        BorderLayout br = new BorderLayout();
-        
+
         {
-            this.setLayout(br);
+            this.setSize(100, 100);
+            this.setLayout(new BorderLayout());
+            this.setBackground(Color.red);
         }
 
-        public void setWall(Wall w, javax.swing.SwingConstants constant){
-            br.addLayoutComponent(w, constant);
+        public void setWall(Wall w, String pos){
+            System.out.println(pos);
+            this.add(w, pos);
+        }
+        
+        public boolean isVisited(){
+            return isVisited;
+        }
+        public int getCompCount(){
+            return this.getComponentCount();
         }
     }
     
     public class Wall extends JLabel{
        
         private int X = 10;
-        private int Y = 100;
+        private int Y = 10;
         
         {
-            this.setSize(X, Y);
+            this.setOpaque(true);
+            this.setPreferredSize(new Dimension(X,Y));
             this.setBackground(Color.BLACK);
+            //this.setText("text");
         }
         
         private int getCellX(){
