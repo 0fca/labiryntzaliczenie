@@ -7,6 +7,7 @@ package labiryntzaliczenie.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.util.HashMap;
 import java.util.Random;
@@ -57,7 +58,7 @@ public class MainWindow extends javax.swing.JFrame {
         setExtendedState(6);
         setSize(new java.awt.Dimension(900, 500));
 
-        jPanel1.setLayout(new java.awt.GridLayout(10, 20, 5, 0));
+        jPanel1.setLayout(new java.awt.GridLayout(10, 20));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -104,15 +105,12 @@ public class MainWindow extends javax.swing.JFrame {
     }
 
     private void prepareMap() {
-        for(int ix = 1; ix < 21; ix++){
-            for(int iy = 1; iy < 11; iy++){
+        for(int ix = 1; ix <= 200; ix++){
                 Cell c = new Cell();
                 for(int i = 1; i <= 4; i++){
                     c.setWall(new Wall(), MAP.get(i));
                 }
                 jPanel1.add(c);
-                
-            }
         }
     }
 
@@ -123,11 +121,13 @@ public class MainWindow extends javax.swing.JFrame {
     private void dfs(JPanel j) {
         while(count < j.getComponentCount()-1){
            
-            for (int w = 1; w < 4; w++) {
-                Cell cell = (Cell)j.getComponent(w);
-                Cell next = (Cell)j.getComponent(w + 1);
+            for (Component comp : j.getComponents()) {
+                Cell cell = (Cell)comp;
+                Cell next = (Cell)j.getComponents()[count + 1];
                 
                 if (!cell.isVisited()) {
+                    Random rand = new Random();
+                    int w = rand.nextInt();
                     cell.removeWall(w);
                     switch(w){
                         case 0:
