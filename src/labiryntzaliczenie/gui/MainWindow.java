@@ -24,6 +24,7 @@ public class MainWindow extends javax.swing.JFrame {
     private final String EAST = java.awt.BorderLayout.EAST;
     private final String WEST = java.awt.BorderLayout.WEST;
     private static HashMap<Integer,String> MAP = new HashMap<>();
+    private int count = 0;
     /**
      * Creates new form MainWindow
      */
@@ -32,6 +33,7 @@ public class MainWindow extends javax.swing.JFrame {
         this.X = this.getWidth();
         this.Y = this.getHeight();
         prepareMap();
+        prepareMaze();
     }
 
     {
@@ -55,7 +57,7 @@ public class MainWindow extends javax.swing.JFrame {
         setExtendedState(6);
         setSize(new java.awt.Dimension(900, 500));
 
-        jPanel1.setLayout(new java.awt.GridLayout(10, 20));
+        jPanel1.setLayout(new java.awt.GridLayout(10, 20, 5, 0));
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -102,24 +104,48 @@ public class MainWindow extends javax.swing.JFrame {
     }
 
     private void prepareMap() {
-        for(int ix = 0; ix < 20; ix++){
-            for(int iy = 0; iy < 10; iy++){
-                dfs();
+        for(int ix = 1; ix < 21; ix++){
+            for(int iy = 1; iy < 11; iy++){
+                Cell c = new Cell();
+                for(int i = 1; i <= 4; i++){
+                    c.setWall(new Wall(), MAP.get(i));
+                }
+                jPanel1.add(c);
+                
             }
         }
     }
 
-    private void dfs(){
-        while(true){
-            Random r = new Random();
-            int cell_num = r.nextInt(1)+4;
-            Cell c = new Cell();
-            if(c.isVisited()){
-
-            }else{
-                c.setWall(new Wall(), MAP.get(cell_num));
-                jPanel1.add(c);
-            }       
+    private void prepareMaze(){
+        //dfs(jPanel1);
+    }
+    
+    private void dfs(JPanel j) {
+        while(count < j.getComponentCount()-1){
+           
+            for (int w = 1; w < 4; w++) {
+                Cell cell = (Cell)j.getComponent(w);
+                Cell next = (Cell)j.getComponent(w + 1);
+                
+                if (!cell.isVisited()) {
+                    cell.removeWall(w);
+                    switch(w){
+                        case 0:
+                            next.removeWall(Math.abs(w-3));
+                            break;
+                        case 1:
+                            next.removeWall(Math.abs(w-2));
+                            break;
+                        case 2:
+                            next.removeWall(Math.abs(w-2));
+                            break;
+                        case 3:
+                            next.removeWall(Math.abs(w-3));
+                            break;
+                    }
+                    count++;
+                }
+            }
         }
     }
   
@@ -137,8 +163,16 @@ public class MainWindow extends javax.swing.JFrame {
             this.add(w, pos);
         }
         
+        public void removeWall(int i){
+            this.remove(i);
+        }
+        
         public boolean isVisited(){
             return isVisited;
+        }
+        
+        public void setVisited(boolean visited){
+            this.isVisited = visited;
         }
         public int getCompCount(){
             return this.getComponentCount();
