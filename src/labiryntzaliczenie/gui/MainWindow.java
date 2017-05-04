@@ -9,6 +9,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 import javax.swing.JLabel;
@@ -25,6 +26,7 @@ public class MainWindow extends javax.swing.JFrame {
     private final String EAST = java.awt.BorderLayout.EAST;
     private final String WEST = java.awt.BorderLayout.WEST;
     private static HashMap<Integer,String> MAP = new HashMap<>();
+    private static ArrayList<Cell> UNVISITED = new ArrayList<>();
     private int count = 0;
     /**
      * Creates new form MainWindow
@@ -55,7 +57,9 @@ public class MainWindow extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("PakMen");
         setExtendedState(6);
+        setPreferredSize(new java.awt.Dimension(900, 500));
         setSize(new java.awt.Dimension(900, 500));
 
         jPanel1.setLayout(new java.awt.GridLayout(10, 20));
@@ -86,7 +90,7 @@ public class MainWindow extends javax.swing.JFrame {
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
+                if ("Metal".equals(info.getName())) {
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
                     break;
                 }
@@ -94,8 +98,6 @@ public class MainWindow extends javax.swing.JFrame {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-        
         //</editor-fold>
 
         /* Create and display the form */
@@ -106,47 +108,45 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void prepareMap() {
         for(int ix = 1; ix <= 200; ix++){
-                Cell c = new Cell();
-                for(int i = 1; i <= 4; i++){
-                    c.setWall(new Wall(), MAP.get(i));
-                }
-                jPanel1.add(c);
+            Cell c = new Cell();
+            for(int i = 1; i <= 4; i++){
+                c.setWall(new Wall(), MAP.get(i));
+            }
+            jPanel1.add(c);
         }
     }
 
     private void prepareMaze(){
-        //dfs(jPanel1);
+        dfs(jPanel1);
     }
     
     private void dfs(JPanel j) {
-        while(count < j.getComponentCount()-1){
-           
-            for (Component comp : j.getComponents()) {
-                Cell cell = (Cell)comp;
-                Cell next = (Cell)j.getComponents()[count + 1];
-                
-                if (!cell.isVisited()) {
-                    Random rand = new Random();
-                    int w = rand.nextInt();
-                    cell.removeWall(w);
-                    switch(w){
-                        case 0:
-                            next.removeWall(Math.abs(w-3));
-                            break;
-                        case 1:
-                            next.removeWall(Math.abs(w-2));
-                            break;
-                        case 2:
-                            next.removeWall(Math.abs(w-2));
-                            break;
-                        case 3:
-                            next.removeWall(Math.abs(w-3));
-                            break;
+        count = j.getComponentCount() - UNVISITED.size();
+        while(count < j.getComponentCount()){
+                ArrayList<JPanel> neighbours = new ArrayList<>();
+                   neighbours.add((JPanel)j.getComponent(count + 1));
+
+                   neighbours.add((JPanel)j.getComponent(count + 20));
+                   if(count > 20){
+                        neighbours.add((JPanel)j.getComponent(count - 1));
+                        neighbours.add((JPanel)j.getComponent(count - 20));
+                   }
+
+               for(int i = 0; i<neighbours.size(); i++){
+                    Cell c = (Cell)neighbours.get(i);
+                    
+                    if(!c.isVisited()){
+                        UNVISITED.add(c);
+                        c.removeWall(i);
+                        Random r = new Random();
+                        int rand = r.nextInt(1)+neighbours.size();
+                        Cell next = (Cell)neighbours.get(rand-1);
+                        next.removeWall(Math.abs(i-2));
+                        c.setVisited(true);
                     }
-                    count++;
-                }
+               }
             }
-        }
+        
     }
   
     public class Cell extends JPanel{
@@ -159,7 +159,6 @@ public class MainWindow extends javax.swing.JFrame {
         }
 
         public void setWall(Wall w, String pos){
-            System.out.println(pos);
             this.add(w, pos);
         }
         
