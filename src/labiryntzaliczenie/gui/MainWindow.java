@@ -7,7 +7,6 @@ package labiryntzaliczenie.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,14 +19,19 @@ import javax.swing.JPanel;
  * @author Obsidiam
  */
 public class MainWindow extends javax.swing.JFrame {
-    private int X,Y = 0;
+
+    private int X, Y = 0;
     private final String SOUTH = java.awt.BorderLayout.SOUTH;
     private final String NORTH = java.awt.BorderLayout.NORTH;
     private final String EAST = java.awt.BorderLayout.EAST;
     private final String WEST = java.awt.BorderLayout.WEST;
-    private static HashMap<Integer,String> MAP = new HashMap<>();
-    private static ArrayList<Cell> UNVISITED = new ArrayList<>();
+    private static HashMap<Integer, String> MAP = new HashMap<>();
+    private static ArrayList<Integer> STACK = new ArrayList<>();
+    private static boolean[] visitedNeighbours = new boolean[200];
+    private static ArrayList<String> WALLS = new ArrayList<>();
+    private Cell next;
     private int count = 0;
+
     /**
      * Creates new form MainWindow
      */
@@ -38,13 +42,14 @@ public class MainWindow extends javax.swing.JFrame {
         prepareMap();
         prepareMaze();
     }
-
+    
     {
         MAP.put(1, NORTH);
         MAP.put(2, EAST);
         MAP.put(3, SOUTH);
         MAP.put(4, WEST);
     }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -105,96 +110,83 @@ public class MainWindow extends javax.swing.JFrame {
             new MainWindow().setVisible(true);
         });
     }
-
+    
     private void prepareMap() {
-        for(int ix = 1; ix <= 200; ix++){
+        for (int ix = 1; ix <= 200; ix++) {
             Cell c = new Cell();
-            for(int i = 1; i <= 4; i++){
+            for (int i = 1; i <= 4; i++) {
                 c.setWall(new Wall(), MAP.get(i));
             }
             jPanel1.add(c);
         }
     }
-
-    private void prepareMaze(){
-        dfs(jPanel1);
+    
+    private void prepareMaze() {
+        dfs();
     }
     
-    private void dfs(JPanel j) {
-        count = j.getComponentCount() - UNVISITED.size();
-        while(count < j.getComponentCount()){
-                ArrayList<JPanel> neighbours = new ArrayList<>();
-                   neighbours.add((JPanel)j.getComponent(count + 1));
-
-                   neighbours.add((JPanel)j.getComponent(count + 20));
-                   if(count > 20){
-                        neighbours.add((JPanel)j.getComponent(count - 1));
-                        neighbours.add((JPanel)j.getComponent(count - 20));
-                   }
-
-               for(int i = 0; i<neighbours.size(); i++){
-                    Cell c = (Cell)neighbours.get(i);
-                    
-                    if(!c.isVisited()){
-                        UNVISITED.add(c);
-                        c.removeWall(i);
-                        Random r = new Random();
-                        int rand = r.nextInt(1)+neighbours.size();
-                        Cell next = (Cell)neighbours.get(rand-1);
-                        next.removeWall(Math.abs(i-2));
-                        c.setVisited(true);
-                    }
-               }
-            }
+    private void dfs() {
+        for(int i = 0; i < 200; i++){
+            STACK.add(i);
+            visitedNeighbours[i] = false;
+        }
         
+        for(int i = 0; i < STACK.size(); i++){
+            if(!visitedNeighbours[i]){
+                //losowanie sąsiada i wybicie ściany(dodanie do listy WALLS z MAP.
+            }else{
+            }
+        }
     }
-  
-    public class Cell extends JPanel{
-        private boolean isVisited = false;
+    
+    public class Cell extends JPanel {
 
+        private boolean isVisited = false;
+        
         {
             this.setSize(100, 100);
             this.setLayout(new BorderLayout());
             this.setBackground(Color.red);
         }
-
-        public void setWall(Wall w, String pos){
+        
+        public void setWall(Wall w, String pos) {
             this.add(w, pos);
         }
         
-        public void removeWall(int i){
+        public void removeWall(int i) {
             this.remove(i);
         }
         
-        public boolean isVisited(){
+        public boolean isVisited() {
             return isVisited;
         }
         
-        public void setVisited(boolean visited){
+        public void setVisited(boolean visited) {
             this.isVisited = visited;
         }
-        public int getCompCount(){
+
+        public int getCompCount() {
             return this.getComponentCount();
         }
     }
     
-    public class Wall extends JLabel{
-       
+    public class Wall extends JLabel {
+        
         private int X = 10;
         private int Y = 10;
         
         {
             this.setOpaque(true);
-            this.setPreferredSize(new Dimension(X,Y));
+            this.setPreferredSize(new Dimension(X, Y));
             this.setBackground(Color.BLACK);
             //this.setText("text");
         }
         
-        private int getCellX(){
+        private int getCellX() {
             return X;
         }
         
-        private int getCellY(){
+        private int getCellY() {
             return Y;
         }
         
