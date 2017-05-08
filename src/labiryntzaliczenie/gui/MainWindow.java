@@ -25,9 +25,6 @@ public class MainWindow extends javax.swing.JFrame {
     private static HashMap<Integer, String> MAP = new HashMap<>();
     private static Stack<Integer> STACK = new Stack<>();
     private static boolean[] visited = new boolean[200];
-    private static ArrayList<String> WALLS = new ArrayList<>();
-    private Cell next;
-    private int count = 0;
  
     /**
      * Creates new form MainWindow
@@ -38,6 +35,7 @@ public class MainWindow extends javax.swing.JFrame {
         this.Y = this.getHeight();
         prepareMap();
         prepareMaze();
+        setPacman();
     }
    
     {
@@ -55,17 +53,17 @@ public class MainWindow extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
- 
+
         jPanel1 = new javax.swing.JPanel();
- 
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("PakMen");
         setExtendedState(6);
         setPreferredSize(new java.awt.Dimension(900, 500));
         setSize(new java.awt.Dimension(900, 500));
- 
+
         jPanel1.setLayout(new java.awt.GridLayout(10, 20));
- 
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -76,7 +74,7 @@ public class MainWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
- 
+
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
@@ -107,7 +105,7 @@ public class MainWindow extends javax.swing.JFrame {
             new MainWindow().setVisible(true);
         });
     }
-    Map<Integer, Cell> cells = new HashMap<Integer, Cell>();
+    Map<Integer, Cell> cells = new HashMap<>();
    
     private void prepareMap() {
         for (int ix = 0; ix < 200; ix++) {
@@ -127,6 +125,13 @@ public class MainWindow extends javax.swing.JFrame {
         dfs();
     }
    
+    private void setPacman(){
+        JLabel jl = new JLabel();
+        
+        Cell c = (Cell)jPanel1.getComponent(0);
+        c.add(jl);
+    }
+    
     private void dfs() {
         int x = 0, y = 0;
         /*
@@ -191,7 +196,7 @@ public class MainWindow extends javax.swing.JFrame {
         {
             this.setSize(100, 100);
             this.setLayout(new BorderLayout());
-            this.setBackground(Color.red);
+            this.setBackground(Color.WHITE);
         }
        
         public void setWall(Wall w, String pos) {

@@ -5,24 +5,12 @@
  */
 package labiryntzaliczenie.gui;
 
-import java.awt.Color;
-import javax.swing.JPanel;
+import javax.swing.JLabel;
 
 /**
  *
- * @author Obsidiam
+ * @author lukas
  */
-public class UserObject extends JPanel{
-    private String NAME = "UserObject";
-    
-    {
-        this.setBackground(Color.BLUE);
-    }
-    
-    @Override
-    public void setName(String name){
-        this.NAME = name;
-    }
-    
+public class UserObject extends JLabel{
     
 }
