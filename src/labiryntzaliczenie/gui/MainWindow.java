@@ -4,34 +4,31 @@
  * and open the template in the editor.
  */
 package labiryntzaliczenie.gui;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Random;
+ 
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-
+ 
 /**
  *
  * @author Obsidiam
  */
 public class MainWindow extends javax.swing.JFrame {
-
+ 
     private int X, Y = 0;
     private final String SOUTH = java.awt.BorderLayout.SOUTH;
     private final String NORTH = java.awt.BorderLayout.NORTH;
     private final String EAST = java.awt.BorderLayout.EAST;
     private final String WEST = java.awt.BorderLayout.WEST;
     private static HashMap<Integer, String> MAP = new HashMap<>();
-    private static ArrayList<Integer> STACK = new ArrayList<>();
-    private static boolean[] visitedNeighbours = new boolean[200];
+    private static Stack<Integer> STACK = new Stack<>();
+    private static boolean[] visited = new boolean[200];
     private static ArrayList<String> WALLS = new ArrayList<>();
     private Cell next;
     private int count = 0;
-
+ 
     /**
      * Creates new form MainWindow
      */
@@ -42,14 +39,14 @@ public class MainWindow extends javax.swing.JFrame {
         prepareMap();
         prepareMaze();
     }
-    
+   
     {
         MAP.put(1, NORTH);
         MAP.put(2, EAST);
         MAP.put(3, SOUTH);
         MAP.put(4, WEST);
     }
-
+ 
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -58,17 +55,17 @@ public class MainWindow extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
+ 
         jPanel1 = new javax.swing.JPanel();
-
+ 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("PakMen");
         setExtendedState(6);
         setPreferredSize(new java.awt.Dimension(900, 500));
         setSize(new java.awt.Dimension(900, 500));
-
+ 
         jPanel1.setLayout(new java.awt.GridLayout(10, 20));
-
+ 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -79,11 +76,11 @@ public class MainWindow extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
-
+ 
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
-
+ 
     /**
      * @param args the command line arguments
      */
@@ -91,7 +88,7 @@ public class MainWindow extends javax.swing.JFrame {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -104,92 +101,141 @@ public class MainWindow extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(MainWindow.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-
+ 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> {
             new MainWindow().setVisible(true);
         });
     }
-    
+    Map<Integer, Cell> cells = new HashMap<Integer, Cell>();
+   
     private void prepareMap() {
-        for (int ix = 1; ix <= 200; ix++) {
+        for (int ix = 0; ix < 200; ix++) {
             Cell c = new Cell();
             for (int i = 1; i <= 4; i++) {
                 c.setWall(new Wall(), MAP.get(i));
             }
+            cells.put(ix, c);
             jPanel1.add(c);
         }
     }
-    
+   
     private void prepareMaze() {
+        for(int i = 0; i < 200; i++){
+            visited[i] = false;
+        }
         dfs();
     }
-    
+   
     private void dfs() {
-        for(int i = 0; i < 200; i++){
-            STACK.add(i);
-            visitedNeighbours[i] = false;
-        }
-        
-        for(int i = 0; i < STACK.size(); i++){
-            if(!visitedNeighbours[i]){
-                //losowanie sąsiada i wybicie ściany(dodanie do listy WALLS z MAP.
-            }else{
+        int x = 0, y = 0;
+        /*
+        Create entry and exit from maze
+        cells.get(0).remove(cells.get(0).walls[0]);
+        cells.get(199).remove(cells.get(199).walls[2]);*/
+        while(hasUnvisitedCells()){
+            visited[20*y+x] = true;
+            Cell cell = cells.get(20 * y + x);
+            List<Integer> unvisited = new ArrayList<>();
+            if (y > 0 && !visited[20 * (y - 1) + x]) unvisited.add((20 * (y - 1) + x));
+            if (x > 0 && !visited[20 * y + (x - 1)]) unvisited.add((20 * y + (x - 1)));
+            if (y < 9 && !visited[20 * (y + 1) + x]) unvisited.add((20 * (y + 1) + x));
+            if (x < 19 && !visited[20 * y + (x + 1)]) unvisited.add((20 * y + (x + 1)));
+            if (unvisited.size() > 0) {
+                STACK.add(20 * y + x);
+                int i = unvisited.get(new Random().nextInt(unvisited.size()));
+                //0-top
+                //1-right
+                //2-bottom
+                //3-left
+                Cell nextCell = cells.get(i);
+                if(i == 20 * y + x+1){
+                    nextCell.remove(nextCell.walls[3]);
+                    cell.remove(cell.walls[1]);
+                }else if(i == 20 * y + x-1){
+                    nextCell.remove(nextCell.walls[1]);
+                    cell.remove(cell.walls[3]);
+                }else if(i == 20 * y + x+20){
+                    nextCell.remove(nextCell.walls[0]);
+                    cell.remove(cell.walls[2]);
+                }else if(i == 20 * y + x-20){
+                    nextCell.remove(nextCell.walls[2]);
+                    cell.remove(cell.walls[0]);
+                }
+ 
+                x = i % 20;
+                y = (int) Math.floor(i / 20d);
+            } else {
+                Integer pop = STACK.pop();
+                x = pop % 20;
+                y = (int) Math.floor(pop / 20d);
+ 
             }
         }
     }
-    
+ 
+    private boolean hasUnvisitedCells() {
+        for(boolean b : visited){
+            if(!b){
+                return true;
+            }
+        }
+        return false;
+    }
+ 
     public class Cell extends JPanel {
-
+ 
         private boolean isVisited = false;
-        
+        private Component[] walls = new Component[4];
+        private int vi = 0;
         {
             this.setSize(100, 100);
             this.setLayout(new BorderLayout());
             this.setBackground(Color.red);
         }
-        
+       
         public void setWall(Wall w, String pos) {
+            walls[vi++] = w;
             this.add(w, pos);
         }
-        
+       
         public void removeWall(int i) {
             this.remove(i);
         }
-        
+       
         public boolean isVisited() {
             return isVisited;
         }
-        
+       
         public void setVisited(boolean visited) {
             this.isVisited = visited;
         }
-
+ 
         public int getCompCount() {
             return this.getComponentCount();
         }
     }
-    
+   
     public class Wall extends JLabel {
-        
+       
         private int X = 10;
         private int Y = 10;
-        
+       
         {
             this.setOpaque(true);
             this.setPreferredSize(new Dimension(X, Y));
             this.setBackground(Color.BLACK);
             //this.setText("text");
         }
-        
+       
         private int getCellX() {
             return X;
         }
-        
+       
         private int getCellY() {
             return Y;
         }
-        
+       
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
