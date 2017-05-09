@@ -6,6 +6,8 @@
 package labiryntzaliczenie.gui;
  
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.*;
 import java.util.List;
 import javax.swing.JLabel;
@@ -17,7 +19,6 @@ import javax.swing.JPanel;
  */
 public class MainWindow extends javax.swing.JFrame {
  
-    private int X, Y = 0;
     private final String SOUTH = java.awt.BorderLayout.SOUTH;
     private final String NORTH = java.awt.BorderLayout.NORTH;
     private final String EAST = java.awt.BorderLayout.EAST;
@@ -26,13 +27,15 @@ public class MainWindow extends javax.swing.JFrame {
     private static Stack<Integer> STACK = new Stack<>();
     private static boolean[] visited = new boolean[200];
  
+    private int CELL_NUM = 0;
+    private int LAST_CELL = 0;
+    private UserObject jl = new UserObject();
+    
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
         initComponents();
-        this.X = this.getWidth();
-        this.Y = this.getHeight();
         prepareMap();
         prepareMaze();
         setPacman();
@@ -61,6 +64,11 @@ public class MainWindow extends javax.swing.JFrame {
         setExtendedState(6);
         setPreferredSize(new java.awt.Dimension(900, 500));
         setSize(new java.awt.Dimension(900, 500));
+        addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                formKeyPressed(evt);
+            }
+        });
 
         jPanel1.setLayout(new java.awt.GridLayout(10, 20));
 
@@ -78,6 +86,42 @@ public class MainWindow extends javax.swing.JFrame {
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
+        // TODO add your handling code here:
+        Cell last  = (Cell)jPanel1.getComponent(CELL_NUM);
+        switch(evt.getExtendedKeyCode()){
+            case KeyEvent.VK_UP:
+                if(checkIfMovePossible(last,0)){
+                    LAST_CELL = CELL_NUM;
+                    CELL_NUM -= 20;
+                    movePacman("up");
+                }
+                break;
+            case KeyEvent.VK_RIGHT:
+                if(checkIfMovePossible(last,1)){
+                    LAST_CELL = CELL_NUM;
+                    CELL_NUM += 1;
+                    movePacman("right");
+                }
+                break;
+            case KeyEvent.VK_LEFT:
+                if(checkIfMovePossible(last,3)){
+                    LAST_CELL = CELL_NUM;
+                    CELL_NUM -= 1;
+                    movePacman("left");
+                }
+                break;
+            case KeyEvent.VK_DOWN:
+                if(checkIfMovePossible(last,2)){
+                    LAST_CELL = CELL_NUM;
+                    CELL_NUM += 20;
+                    movePacman("down");
+                }
+                break;
+        }
+        jPanel1.revalidate();
+    }//GEN-LAST:event_formKeyPressed
  
     /**
      * @param args the command line arguments
@@ -125,11 +169,22 @@ public class MainWindow extends javax.swing.JFrame {
         dfs();
     }
    
-    private void setPacman(){
-        JLabel jl = new JLabel();
+    private void movePacman(String dir){
+        Cell last  = (Cell)jPanel1.getComponent(LAST_CELL);
+        Cell c = (Cell)jPanel1.getComponent(CELL_NUM);
+        last.remove(jl);
+        last.revalidate();
+        last.updateUI();
+        jl.setGraphic(dir);
+        c.add(jl,java.awt.BorderLayout.CENTER);
+        c.revalidate();
+        c.updateUI();
         
+        
+    }
+    private void setPacman(){
         Cell c = (Cell)jPanel1.getComponent(0);
-        c.add(jl);
+        c.add(jl,"Center");
     }
     
     private void dfs() {
@@ -157,15 +212,22 @@ public class MainWindow extends javax.swing.JFrame {
                 if(i == 20 * y + x+1){
                     nextCell.remove(nextCell.walls[3]);
                     cell.remove(cell.walls[1]);
+
                 }else if(i == 20 * y + x-1){
                     nextCell.remove(nextCell.walls[1]);
                     cell.remove(cell.walls[3]);
+                    nextCell.walls[1] = null;
+                    cell.walls[3] = null;
                 }else if(i == 20 * y + x+20){
                     nextCell.remove(nextCell.walls[0]);
                     cell.remove(cell.walls[2]);
+                    nextCell.walls[0] = null;
+                    cell.walls[2] = null;
                 }else if(i == 20 * y + x-20){
                     nextCell.remove(nextCell.walls[2]);
                     cell.remove(cell.walls[0]);
+                    nextCell.walls[2] = null;
+                    cell.walls[0] = null;
                 }
  
                 x = i % 20;
@@ -187,16 +249,21 @@ public class MainWindow extends javax.swing.JFrame {
         }
         return false;
     }
+
+    private boolean checkIfMovePossible(Cell c, int direction) {
+        return c.checkIfThereIsNoWall(direction);
+    }
  
     public class Cell extends JPanel {
  
         private boolean isVisited = false;
         private Component[] walls = new Component[4];
         private int vi = 0;
+
         {
             this.setSize(100, 100);
             this.setLayout(new BorderLayout());
-            this.setBackground(Color.WHITE);
+            this.setBackground(Color.BLACK);
         }
        
         public void setWall(Wall w, String pos) {
@@ -219,6 +286,15 @@ public class MainWindow extends javax.swing.JFrame {
         public int getCompCount() {
             return this.getComponentCount();
         }
+        
+        public boolean checkIfThereIsNoWall(int direction){
+            //System.out.println(walls[direction]);
+            if(walls[direction] == null){
+                return true;
+            }else{
+                return false;
+            }
+        }
     }
    
     public class Wall extends JLabel {
@@ -229,7 +305,7 @@ public class MainWindow extends javax.swing.JFrame {
         {
             this.setOpaque(true);
             this.setPreferredSize(new Dimension(X, Y));
-            this.setBackground(Color.BLACK);
+            this.setBackground(Color.WHITE);
             //this.setText("text");
         }
        
