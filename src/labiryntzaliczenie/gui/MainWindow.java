@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
  
 /**
@@ -31,7 +32,7 @@ public class MainWindow extends javax.swing.JFrame {
     private static HashMap<Integer, String> MAP = new HashMap<>();
     private static Stack<Integer> STACK = new Stack<>();
     private static boolean[] visited = new boolean[200];
- 
+    private ObstacleGenerator OT = new ObstacleGenerator("ObstacleGenerator");
     private int CELL_NUM,LAST_CELL;
  
     private UserObject jl = new UserObject();
@@ -165,12 +166,13 @@ public class MainWindow extends javax.swing.JFrame {
                 c.setWall(new Wall(), MAP.get(i));
                 if(ix == 199){
                     JLabel castle = new JLabel();
-                    InputStream in = getClass().getResourceAsStream("/gallery/images/castle.jpg");
+                    InputStream in = getClass().getResourceAsStream("castle.jpg");
                     Image cas;
                     try {
                         cas = ImageIO.read(in);
                         ImageIcon im = new ImageIcon(cas);
                         castle.setIcon(im);
+                        castle.setHorizontalAlignment(JLabel.CENTER);
                         c.add(castle,0);
                     } catch (IOException ex) {
                         Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
@@ -201,6 +203,9 @@ public class MainWindow extends javax.swing.JFrame {
             c.revalidate();
             c.updateUI();
         }else{
+            Toolkit.getDefaultToolkit().beep();
+            JOptionPane.showMessageDialog(this, "Game Over!", "Game Over", JOptionPane.ERROR_MESSAGE);
+            
             resetAmcia();
         }
     }
@@ -210,8 +215,11 @@ public class MainWindow extends javax.swing.JFrame {
         LAST_CELL = 0;
         Cell c = (Cell)jPanel1.getComponent(0);
         c.add(jl,"Center");
-        ObstacleGenerator o = new ObstacleGenerator();
-        o.start();
+        
+        if(!OT.isAlive()){
+            System.out.println("ObstacleGenerator thread started.");
+            OT.start();
+        }
     }
     
     private void dfs() {
@@ -366,11 +374,16 @@ public class MainWindow extends javax.swing.JFrame {
     public class ObstacleGenerator extends Thread implements Runnable{
         private Thread TH;
         private HashMap<Integer,Obstacle> OBSTC_MAP = new HashMap<>();
+        private String name;
+        
+        public ObstacleGenerator(String name){
+            this.name = name;
+        }
         
         @Override
         public void start(){
             if(TH == null){
-                TH = new Thread(this);
+                TH = new Thread(this,name);
                 TH.start();
             }
         }
@@ -393,14 +406,15 @@ public class MainWindow extends javax.swing.JFrame {
             OBSTC_MAP.forEach((x,y) ->{
                 Obstacle l = (Obstacle)y;
                 Cell c = (Cell)jPanel1.getComponent(x);
+                c.setIsGhosted(false);
                 c.remove(l);
                 c.revalidate();
                 c.updateUI();
-                c.setIsGhosted(false);
             });
+            
             OBSTC_MAP.clear();
             
-            for(int i = 0; i <= 5; i++){
+            for(int i = 0; i < 5; i++){
                 Obstacle o = new Obstacle();
                 Random r = new Random();
                 int cell = r.nextInt(199);
