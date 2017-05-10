@@ -7,9 +7,10 @@ package labiryntzaliczenie.gui;
  
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.*;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
  
@@ -27,8 +28,8 @@ public class MainWindow extends javax.swing.JFrame {
     private static Stack<Integer> STACK = new Stack<>();
     private static boolean[] visited = new boolean[200];
  
-    private int CELL_NUM = 0;
-    private int LAST_CELL = 0;
+    private int CELL_NUM,LAST_CELL;
+ 
     private UserObject jl = new UserObject();
     
     /**
@@ -39,6 +40,7 @@ public class MainWindow extends javax.swing.JFrame {
         prepareMap();
         prepareMaze();
         setPacman();
+        
     }
    
     {
@@ -90,33 +92,34 @@ public class MainWindow extends javax.swing.JFrame {
     private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
         // TODO add your handling code here:
         Cell last  = (Cell)jPanel1.getComponent(CELL_NUM);
+        
         switch(evt.getExtendedKeyCode()){
             case KeyEvent.VK_UP:
                 if(checkIfMovePossible(last,0)){
                     LAST_CELL = CELL_NUM;
                     CELL_NUM -= 20;
-                    movePacman("up");
+                    movePacman();
                 }
                 break;
             case KeyEvent.VK_RIGHT:
                 if(checkIfMovePossible(last,1)){
                     LAST_CELL = CELL_NUM;
                     CELL_NUM += 1;
-                    movePacman("right");
+                    movePacman();
                 }
                 break;
             case KeyEvent.VK_LEFT:
                 if(checkIfMovePossible(last,3)){
                     LAST_CELL = CELL_NUM;
                     CELL_NUM -= 1;
-                    movePacman("left");
+                    movePacman();
                 }
                 break;
             case KeyEvent.VK_DOWN:
                 if(checkIfMovePossible(last,2)){
                     LAST_CELL = CELL_NUM;
                     CELL_NUM += 20;
-                    movePacman("down");
+                    movePacman();
                 }
                 break;
         }
@@ -169,30 +172,37 @@ public class MainWindow extends javax.swing.JFrame {
         dfs();
     }
    
-    private void movePacman(String dir){
+    private void movePacman(){
         Cell last  = (Cell)jPanel1.getComponent(LAST_CELL);
         Cell c = (Cell)jPanel1.getComponent(CELL_NUM);
         last.remove(jl);
         last.revalidate();
         last.updateUI();
-        jl.setGraphic(dir);
-        c.add(jl,java.awt.BorderLayout.CENTER);
-        c.revalidate();
-        c.updateUI();
-        
-        
+        //jl.setGraphic(dir);
+        if(!c.checkIfGhosted()){
+            c.add(jl,java.awt.BorderLayout.CENTER);
+            c.revalidate();
+            c.updateUI();
+        }else{
+            resetAmcia();
+        }
     }
+    
     private void setPacman(){
+        CELL_NUM = 0;
+        LAST_CELL = 0;
         Cell c = (Cell)jPanel1.getComponent(0);
         c.add(jl,"Center");
+        ObstacleGenerator o = new ObstacleGenerator();
+        o.start();
     }
     
     private void dfs() {
         int x = 0, y = 0;
-        /*
-        Create entry and exit from maze
+        
+        //Create entry and exit from maze
         cells.get(0).remove(cells.get(0).walls[0]);
-        cells.get(199).remove(cells.get(199).walls[2]);*/
+        cells.get(199).remove(cells.get(199).walls[2]);
         while(hasUnvisitedCells()){
             visited[20*y+x] = true;
             Cell cell = cells.get(20 * y + x);
@@ -212,7 +222,8 @@ public class MainWindow extends javax.swing.JFrame {
                 if(i == 20 * y + x+1){
                     nextCell.remove(nextCell.walls[3]);
                     cell.remove(cell.walls[1]);
-
+                    nextCell.walls[3] = null;
+                    cell.walls[1] = null;
                 }else if(i == 20 * y + x-1){
                     nextCell.remove(nextCell.walls[1]);
                     cell.remove(cell.walls[3]);
@@ -253,17 +264,36 @@ public class MainWindow extends javax.swing.JFrame {
     private boolean checkIfMovePossible(Cell c, int direction) {
         return c.checkIfThereIsNoWall(direction);
     }
+
+    private void resetAmcia() {
+        Component[] c = jPanel1.getComponents();
+        for(Component com : c){
+            Cell cell = (Cell)com;
+            Component[] c2 = cell.getComponents();
+            for(Component com2 : c2){
+                if(com2 instanceof UserObject | com2 instanceof Obstacle){
+                    cell.remove(com2);
+                    cell.revalidate();
+                    cell.updateUI();
+                }
+            }
+        }
+        setPacman();
+        jPanel1.revalidate();
+        jPanel1.updateUI();
+   }
  
     public class Cell extends JPanel {
  
         private boolean isVisited = false;
         private Component[] walls = new Component[4];
         private int vi = 0;
-
+        private boolean isGhosted = false;
+        
         {
             this.setSize(100, 100);
             this.setLayout(new BorderLayout());
-            this.setBackground(Color.BLACK);
+            this.setBackground(Color.WHITE);
         }
        
         public void setWall(Wall w, String pos) {
@@ -288,12 +318,19 @@ public class MainWindow extends javax.swing.JFrame {
         }
         
         public boolean checkIfThereIsNoWall(int direction){
-            //System.out.println(walls[direction]);
             if(walls[direction] == null){
                 return true;
             }else{
                 return false;
             }
+        }
+        
+        public boolean checkIfGhosted(){
+            return isGhosted;
+        }
+        
+        public void setIsGhosted(boolean ghosted){
+            this.isGhosted = ghosted;
         }
     }
    
@@ -305,18 +342,59 @@ public class MainWindow extends javax.swing.JFrame {
         {
             this.setOpaque(true);
             this.setPreferredSize(new Dimension(X, Y));
-            this.setBackground(Color.WHITE);
-            //this.setText("text");
+            this.setBackground(Color.BLACK);
         }
-       
-        private int getCellX() {
-            return X;
+    }
+    
+    public class ObstacleGenerator extends Thread implements Runnable{
+        private Thread TH;
+        private HashMap<Integer,Obstacle> OBSTC_MAP = new HashMap<>();
+        
+        @Override
+        public void start(){
+            if(TH == null){
+                TH = new Thread(this);
+                TH.start();
+            }
         }
-       
-        private int getCellY() {
-            return Y;
+        
+        @Override
+        public void run(){
+            while(true){
+                generateObstacles();
+                try {
+                    Thread.sleep(5000);
+                    jPanel1.revalidate();
+                    jPanel1.updateUI();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
-       
+        
+        private void generateObstacles(){
+            OBSTC_MAP.forEach((x,y) ->{
+                Obstacle l = (Obstacle)y;
+                Cell c = (Cell)jPanel1.getComponent(x);
+                c.remove(l);
+                c.revalidate();
+                c.updateUI();
+                c.setIsGhosted(false);
+            });
+            OBSTC_MAP.clear();
+            
+            for(int i = 0; i <= 5; i++){
+                Obstacle o = new Obstacle();
+                Random r = new Random();
+                int cell = r.nextInt(199);
+                Cell c = (Cell)jPanel1.getComponent(cell);
+                c.add(o);
+                c.setIsGhosted(true);
+                c.revalidate();
+                c.updateUI();
+                OBSTC_MAP.put(cell, o);
+            }
+        }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel jPanel1;
