@@ -7,10 +7,14 @@ package labiryntzaliczenie.gui;
  
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
  
@@ -159,6 +163,19 @@ public class MainWindow extends javax.swing.JFrame {
             Cell c = new Cell();
             for (int i = 1; i <= 4; i++) {
                 c.setWall(new Wall(), MAP.get(i));
+                if(ix == 199){
+                    JLabel castle = new JLabel();
+                    InputStream in = getClass().getResourceAsStream("/gallery/images/castle.jpg");
+                    Image cas;
+                    try {
+                        cas = ImageIO.read(in);
+                        ImageIcon im = new ImageIcon(cas);
+                        castle.setIcon(im);
+                        c.add(castle,0);
+                    } catch (IOException ex) {
+                        Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
             }
             cells.put(ix, c);
             jPanel1.add(c);
