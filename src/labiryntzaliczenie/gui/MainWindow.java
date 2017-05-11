@@ -36,7 +36,7 @@ public class MainWindow extends javax.swing.JFrame {
     private int CELL_NUM,LAST_CELL;
     private int TRY = 3;
     
-    private UserObject jl = new UserObject();
+    private UserObject jl = new UserObject();//stworzenie prywatnego globalnego obiektu klasy UserObject
     
     /**
      * Creates new form MainWindow
@@ -243,8 +243,10 @@ public class MainWindow extends javax.swing.JFrame {
         Cell c = (Cell)jPanel1.getComponent(0);
         c.add(jl,"Center");
         
-        if(!OT.isAlive()){
-            System.out.println("ObstacleGenerator thread started.");
+        if(!OT.isAlive()){//sprawdzenie czy wątek generator przeszkód jeszcze nie jest żywy
+            //ponieważ nie było żywego wątku generator przeszkód, należy go zastartować używają dziedziczonej w ObstacleGenerator
+            //metody start()
+          
             OT.start();
         }
     }
@@ -341,7 +343,7 @@ public class MainWindow extends javax.swing.JFrame {
              System.exit(0);
         }
    }
- 
+ //klasa dziedzicząca po JPanel, reprezentuje komórkę
     public class Cell extends JPanel {
  
         private boolean isVisited = false;
@@ -392,7 +394,7 @@ public class MainWindow extends javax.swing.JFrame {
             this.isGhosted = ghosted;
         }
     }
-   
+   //klasa dziedzicząca po JLabel, reprezentuje ścianę
     public class Wall extends JLabel {
        
         private int X = 10;
@@ -404,7 +406,7 @@ public class MainWindow extends javax.swing.JFrame {
             this.setBackground(Color.BLACK);
         }
     }
-    
+    //klasa wątka obocznego, niezależnego od głównego wątku AWT-Thread-0; odpowiada za generowanie obiektów Obstacle, umieszczanie ich na mapie oraz ususwanie ich z mapy
     public class ObstacleGenerator extends Thread implements Runnable{
         private Thread TH;
         private HashMap<Integer,Obstacle> OBSTC_MAP = new HashMap<>();
@@ -417,6 +419,7 @@ public class MainWindow extends javax.swing.JFrame {
         @Override
         public void start(){
             if(TH == null){
+                System.out.println("OG created.");
                 TH = new Thread(this,name);
                 TH.start();
             }
@@ -427,6 +430,7 @@ public class MainWindow extends javax.swing.JFrame {
             while(true){
                 generateObstacles();
                 try {
+                    System.gc();
                     Thread.sleep(5000);
                     jPanel1.revalidate();
                     jPanel1.updateUI();
