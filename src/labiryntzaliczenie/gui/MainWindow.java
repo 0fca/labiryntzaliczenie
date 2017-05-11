@@ -34,20 +34,24 @@ public class MainWindow extends javax.swing.JFrame {
     private static boolean[] visited = new boolean[200];
     private ObstacleGenerator OT = new ObstacleGenerator("ObstacleGenerator");
     private int CELL_NUM,LAST_CELL;
- 
+    private int TRY = 3;
+    
     private UserObject jl = new UserObject();
     
     /**
      * Creates new form MainWindow
      */
     public MainWindow() {
+        //inicjalizacja komponentów okna
         initComponents();
+        //przygotowanie siatki pod mapę
         prepareMap();
+        //przygotowanie labiryntu w oparciu o algorytm DFS
         prepareMaze();
+        //ustawienie postaci na mapie
         setPacman();
-        
     }
-   
+   //initializer, init obiektu MAP
     {
         MAP.put(1, NORTH);
         MAP.put(2, EAST);
@@ -65,6 +69,9 @@ public class MainWindow extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("PakMen");
@@ -78,17 +85,17 @@ public class MainWindow extends javax.swing.JFrame {
         });
 
         jPanel1.setLayout(new java.awt.GridLayout(10, 20));
+        getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
+        jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.LINE_AXIS));
+
+        jLabel2.setText("Próba:");
+        jPanel2.add(jLabel2);
+
+        jLabel1.setText(String.valueOf(TRY));
+        jPanel2.add(jLabel1);
+
+        getContentPane().add(jPanel2, java.awt.BorderLayout.PAGE_START);
 
         pack();
         setLocationRelativeTo(null);
@@ -96,8 +103,8 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void formKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_formKeyPressed
         // TODO add your handling code here:
-        Cell last  = (Cell)jPanel1.getComponent(CELL_NUM);
-        
+        Cell last  = (Cell)jPanel1.getComponent(CELL_NUM);//dokonuje wyboru komórki w oparciu o numer indexu
+        //przełączanie pomiędzy odpowiednimi polami klasy KeyEvent tak aby zmienić wartości globalnych zmiennych LAST_CELL i CELL_NUM zgodnie z kierunkiem ruchu gracza, wykonanie przeniesienia postaci.
         switch(evt.getExtendedKeyCode()){
             case KeyEvent.VK_UP:
                 if(checkIfMovePossible(last,0)){
@@ -161,12 +168,15 @@ public class MainWindow extends javax.swing.JFrame {
    
     private void prepareMap() {
         for (int ix = 0; ix < 200; ix++) {
+            //tworzę obiekt c klasy Cell
             Cell c = new Cell();
             for (int i = 1; i <= 4; i++) {
+                //dodaję ścianę do komórki na każdym z jej czterech boków
                 c.setWall(new Wall(), MAP.get(i));
+                //jeśli ix = 199 to dodany zostaje obiekt klasy JLabel z grafiką zamku
                 if(ix == 199){
                     JLabel castle = new JLabel();
-                    InputStream in = getClass().getResourceAsStream("castle.jpg");
+                    InputStream in = getClass().getResourceAsStream("castle.png");
                     Image cas;
                     try {
                         cas = ImageIO.read(in);
@@ -179,37 +189,54 @@ public class MainWindow extends javax.swing.JFrame {
                     }
                 }
             }
+            //umieszczenie wszystkich komórek w mapie komórek oraz w modelu widocznym dla użyszkodnika
             cells.put(ix, c);
             jPanel1.add(c);
+            
         }
     }
    
     private void prepareMaze() {
+        //ujednolicenie stanów w tablicy visited.
         for(int i = 0; i < 200; i++){
             visited[i] = false;
         }
+        //wezwanie metody dfs, by przygotowac labirynt
         dfs();
     }
-   
+   //przemieszczenie postaci pacmana
     private void movePacman(){
         Cell last  = (Cell)jPanel1.getComponent(LAST_CELL);
         Cell c = (Cell)jPanel1.getComponent(CELL_NUM);
         last.remove(jl);
         last.revalidate();
         last.updateUI();
+        //s
         //jl.setGraphic(dir);
         if(!c.checkIfGhosted()){
-            c.add(jl,java.awt.BorderLayout.CENTER);
-            c.revalidate();
-            c.updateUI();
+            if(CELL_NUM != 199){
+                c.add(jl,java.awt.BorderLayout.CENTER);
+                c.revalidate();
+                c.updateUI();
+            }else{
+                int choice = JOptionPane.showConfirmDialog(this, "Wygrałeś! Chcesz zagrać ponownie?", "Game Over", JOptionPane.YES_NO_OPTION);
+                if(choice == JOptionPane.YES_OPTION){
+                    resetAmcia();
+                }else{
+                    System.exit(0);
+                }
+            }
         }else{
             Toolkit.getDefaultToolkit().beep();
-            JOptionPane.showMessageDialog(this, "Game Over!", "Game Over", JOptionPane.ERROR_MESSAGE);
-            
-            resetAmcia();
+            int choice = JOptionPane.showConfirmDialog(this, "Game Over! Chcesz zagrać ponownie?", "Game Over", JOptionPane.YES_NO_OPTION);
+            if(choice == JOptionPane.YES_OPTION){
+                resetAmcia();
+            }else{
+                System.exit(0);
+            }
         }
     }
-    
+    //ustawienie postaci na mapie
     private void setPacman(){
         CELL_NUM = 0;
         LAST_CELL = 0;
@@ -221,7 +248,7 @@ public class MainWindow extends javax.swing.JFrame {
             OT.start();
         }
     }
-    
+    //implementacja algorytmu DFS
     private void dfs() {
         int x = 0, y = 0;
         
@@ -276,7 +303,7 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
     }
- 
+ //sprawdza czy na mapie są jeszcze komórki, które nie zostały odwiedzone
     private boolean hasUnvisitedCells() {
         for(boolean b : visited){
             if(!b){
@@ -285,27 +312,34 @@ public class MainWindow extends javax.swing.JFrame {
         }
         return false;
     }
-
+//sprawdza czy ruch jest możliwy
     private boolean checkIfMovePossible(Cell c, int direction) {
         return c.checkIfThereIsNoWall(direction);
     }
-
+//resetuje stan postaci gracza
     private void resetAmcia() {
-        Component[] c = jPanel1.getComponents();
-        for(Component com : c){
-            Cell cell = (Cell)com;
-            Component[] c2 = cell.getComponents();
-            for(Component com2 : c2){
-                if(com2 instanceof UserObject | com2 instanceof Obstacle){
-                    cell.remove(com2);
-                    cell.revalidate();
-                    cell.updateUI();
+        if(TRY >= 1){
+            Component[] c = jPanel1.getComponents();
+            for(Component com : c){
+                Cell cell = (Cell)com;
+                Component[] c2 = cell.getComponents();
+                for(Component com2 : c2){
+                    if(com2 instanceof UserObject | com2 instanceof Obstacle){
+                        cell.remove(com2);
+                        cell.revalidate();
+                        cell.updateUI();
+                    }
                 }
             }
+            setPacman();
+            TRY -= 1;
+            jLabel1.setText(String.valueOf(TRY));
+            jPanel1.revalidate();
+            jPanel1.updateUI();
+        }else{
+             JOptionPane.showMessageDialog(this, "Przekroczyłeś limit prób! Chcesz zagrać ponownie?", "Limit prób", JOptionPane.INFORMATION_MESSAGE);
+             System.exit(0);
         }
-        setPacman();
-        jPanel1.revalidate();
-        jPanel1.updateUI();
    }
  
     public class Cell extends JPanel {
@@ -318,7 +352,7 @@ public class MainWindow extends javax.swing.JFrame {
         {
             this.setSize(100, 100);
             this.setLayout(new BorderLayout());
-            this.setBackground(Color.WHITE);
+            this.setBackground(new Color(8, 46, 121));
         }
        
         public void setWall(Wall w, String pos) {
@@ -428,6 +462,9 @@ public class MainWindow extends javax.swing.JFrame {
         }
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     // End of variables declaration//GEN-END:variables
 }

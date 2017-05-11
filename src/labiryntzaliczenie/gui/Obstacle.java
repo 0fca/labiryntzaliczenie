@@ -20,7 +20,7 @@ import javax.swing.JLabel;
  */
 public class Obstacle extends JLabel{
     {
-        InputStream in = getClass().getResourceAsStream("ghost.jpg");
+        InputStream in = getClass().getResourceAsStream("ghost.png");
         try {
             Image i = ImageIO.read(in);
             ImageIcon im = new ImageIcon(i);
