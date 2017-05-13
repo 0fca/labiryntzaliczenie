@@ -221,7 +221,11 @@ public class MainWindow extends javax.swing.JFrame {
             }else{
                 int choice = JOptionPane.showConfirmDialog(this, "Wygrałeś! Chcesz zagrać ponownie?", "Game Over", JOptionPane.YES_NO_OPTION);
                 if(choice == JOptionPane.YES_OPTION){
+                    jPanel1.removeAll();
+                    prepareMap();
+                    prepareMaze();
                     resetAmcia();
+                    
                 }else{
                     System.exit(0);
                 }
@@ -244,7 +248,7 @@ public class MainWindow extends javax.swing.JFrame {
         c.add(jl,"Center");
         
         if(!OT.isAlive()){//sprawdzenie czy wątek generator przeszkód jeszcze nie jest żywy
-            //ponieważ nie było żywego wątku generator przeszkód, należy go zastartować używają dziedziczonej w ObstacleGenerator
+            //ponieważ nie było żywego wątku generator przeszkód, należy go zastartować używając dziedziczonej w ObstacleGenerator
             //metody start()
           
             OT.start();
